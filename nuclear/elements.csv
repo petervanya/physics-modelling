@@ -49,7 +49,7 @@ Silver,Ag,47,61,108
 Cadmium,Cd,48,64,112
 Indium,In,49,66,115
 Tin,Sn,50,69,119
-Antimony,Sb,51,72,121
+Antimony,Sb,51,71,122
 Tellurium,Te,52,76,128
 Iodine,I,53,74,127
 Xenon,Xe,54,77,131
@@ -92,4 +92,5 @@ Thorium,Th,90,142,232
 Protactinium,Pa,91,140,231
 Uranium,U,92,146,238
 Neptunium,Np,93,144,237
-Plutonium,Pu,94,150,244
+Plutonium,Pu,94,148,242
+Americium,Am,95,148,243
