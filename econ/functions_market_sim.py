@@ -78,8 +78,8 @@ def simulate_market_1d(
 def simulate_market_2d(
     mat_Es,
     mat_Ns,
-    mat_Caps,
-    mat_PP_Caps,
+    vec_Caps,
+    vec_PP_Caps,
     dN=0.01,
     n_steps=5000,
     n_sim=1000,
@@ -106,6 +106,7 @@ def simulate_market_2d(
     avg_Ns = np.zeros_like(mat_Ns)
 
     n_swap = 0  # number of successful swaps
+    n_measure = 0  # number of measured steps
 
     print("step n_swap E dE P")
     for step in range(n_steps + 1):
@@ -116,15 +117,8 @@ def simulate_market_2d(
             j1 = np.random.randint(num_pp)
             i2 = np.random.randint(num_E)
             j2 = np.random.randint(num_pp)
-            if (
-                selection_rules_2d(i1, j1, i2, j2)
-                # mat_Ns[i1, j1] > 0.0 and
-                # mat_Ns[i2, j2] < mat_Caps[i2, j2]
-                # (mat_Ns.sum(0) < mat_PP_Caps).all()
-            ):
+            if selection_rules_2d(i1, j1, i2, j2):
                 break
-        if DEBUG:
-            print(i1, j1, i2, j2)
 
         # swap particles
         mat_Ns[i1, j1] -= dN
@@ -132,14 +126,15 @@ def simulate_market_2d(
 
         dE = mat_Es[i2, j2] - mat_Es[i1, j1]
         if DEBUG:
-            print("dE", dE)
+            print(f"({i1}, {j1}) to ({i2}, {j2}), dE {dE}")
 
-        # perform Metropolis step, return to original config, prevent overflow in exp
+        # Metropolis step, preventing overflow in exp
+        # return to original config,
         if (
-            np.exp(exp_bounding_fun(-dE / T)) <= np.random.rand()
+            np.exp(exp_bounding_fun(-dE / T)) < np.random.rand()
             or mat_Ns[i1, j1] < 0.0
-            or mat_Ns[i2, j2] > mat_Caps[i2, j2]
-            or (mat_Ns.sum(axis=0) > mat_PP_Caps).any()
+            or (mat_Ns.sum(axis=1) > vec_Caps).any()
+            or (mat_Ns.sum(axis=0) > vec_PP_Caps).any()
         ):
             # reject
             mat_Ns[i1, j1] += dN
@@ -163,11 +158,12 @@ def simulate_market_2d(
 
         # compute averages
         if step > n_eq:
+            n_measure += 1
             avg_Ns += mat_Ns
 
         # print
         if step % THERMO == 0:
-            print(step, n_swap, E, dE, P)
+            print(step, n_swap, E.round(2), dE.round(2), P.round(2))
 
     # post-process
     avg_Ns = avg_Ns / n_sim
